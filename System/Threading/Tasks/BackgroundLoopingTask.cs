@@ -26,12 +26,13 @@ namespace TheDialgaTeam.mscorlib.System.Threading.Tasks
         {
             RunningTask = Task.Factory.StartNew(async () =>
                 {
-                    while (!CancellationTokenSource.IsCancellationRequested)
+                    do
                     {
                         action(CancellationTokenSource);
-                        await Task.Delay(1).ConfigureAwait(false);
-                    }
-                }, CancellationTokenSource.Token, TaskCreationOptions.LongRunning, taskScheduler ?? TaskScheduler.Current).Unwrap();
+                        await Task.Delay(1000).ConfigureAwait(false);
+                    } while (!CancellationTokenSource.IsCancellationRequested);
+                }, CancellationTokenSource.Token, TaskCreationOptions.LongRunning, taskScheduler ?? TaskScheduler.Current
+            ).Unwrap();
         }
 
         public BackgroundLoopingTask(Func<CancellationTokenSource, Task> action) : this(action, default, TaskScheduler.Current)
@@ -50,11 +51,11 @@ namespace TheDialgaTeam.mscorlib.System.Threading.Tasks
         {
             RunningTask = Task.Factory.StartNew(async () =>
                 {
-                    while (!CancellationTokenSource.IsCancellationRequested)
+                    do
                     {
                         await action(CancellationTokenSource).ConfigureAwait(false);
-                        await Task.Delay(1).ConfigureAwait(false);
-                    }
+                        await Task.Delay(1000).ConfigureAwait(false);
+                    } while (!CancellationTokenSource.IsCancellationRequested);
                 }, CancellationTokenSource.Token, TaskCreationOptions.LongRunning, taskScheduler ?? TaskScheduler.Current).Unwrap();
         }
 
@@ -68,15 +69,15 @@ namespace TheDialgaTeam.mscorlib.System.Threading.Tasks
             return backgroundLoopingTask.RunningTask;
         }
 
+        public void Cancel()
+        {
+            CancellationTokenSource.Cancel();
+        }
+
         public void Dispose()
         {
             RunningTask?.Dispose();
             CancellationTokenSource?.Dispose();
-        }
-
-        public void Cancel()
-        {
-            CancellationTokenSource.Cancel();
         }
     }
 }
